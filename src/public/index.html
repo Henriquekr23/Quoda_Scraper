@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTE Mediador – Dashboard de Instrumentos Coletivos</title>
+  <meta name="description" content="Dashboard para visualização e coleta de instrumentos coletivos de trabalho registrados no MTE Mediador.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Design Tokens ─────────────────────────────────────────────── */
+    :root {
+      --bg-primary:       #0a0b10;
+      --bg-secondary:     #12131a;
+      --bg-tertiary:      #1b1d28;
+      --bg-input:         #111218;
+      --accent:           #6366f1;
+      --accent-rgb:       99, 102, 241;
+      --accent-purple:    #a855f7;
+      --accent-purple-rgb:168, 85, 247;
+      --text-main:        #f3f4f6;
+      --text-muted:       #9ca3af;
+      --text-faint:       #4b5563;
+      --border:           rgba(255,255,255,0.07);
+      --border-hover:     rgba(255,255,255,0.14);
+      --glass-bg:         rgba(255,255,255,0.025);
+      --glass-border:     rgba(255,255,255,0.05);
+      --success:          #10b981;
+      --warning:          #f59e0b;
+      --danger:           #ef4444;
+      --radius-sm:        6px;
+      --radius-md:        10px;
+      --radius-lg:        14px;
+      --transition:       0.22s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ─── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+    }
+
+    /* ─── Scrollbar ──────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    /* ─── Layout ─────────────────────────────────────────────────────── */
+    .sidebar {
+      width: 340px;
+      flex-shrink: 0;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0a0b10 0%, #110f1c 100%);
+    }
+
+    /* ─── Sidebar: Logo ──────────────────────────────────────────────── */
+    .sidebar-logo {
+      padding: 20px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-purple) 100%);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 16px rgba(var(--accent-rgb),0.35);
+    }
+    .logo-icon svg { width: 18px; height: 18px; fill: #fff; }
+
+    .logo-text h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 17px; font-weight: 600;
+      background: linear-gradient(to right, #fff, #c7d2fe);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo-text span {
+      font-size: 10px; color: var(--text-muted);
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    /* ─── Sidebar: Register Form ─────────────────────────────────────── */
+    .register-section {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .section-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    .form-field {
+      margin-bottom: 10px;
+    }
+    .form-field label {
+      display: block;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      color: var(--text-main);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.18);
+    }
+    .form-input::placeholder { color: var(--text-faint); }
+    .form-input.error { border-color: var(--danger); }
+
+    .form-error-msg {
+      font-size: 11px; color: var(--danger);
+      margin-top: 4px;
+      display: none;
+    }
+
+    .btn-register {
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px; font-weight: 700;
+      font-family: inherit;
+      cursor: pointer; border: none; outline: none;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-purple) 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(var(--accent-rgb),0.28);
+      transition: all var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      margin-top: 4px;
+    }
+    .btn-register:hover:not(:disabled) {
+      box-shadow: 0 6px 18px rgba(var(--accent-rgb),0.42);
+      transform: translateY(-1px);
+    }
+    .btn-register:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .register-feedback {
+      margin-top: 8px;
+      font-size: 11px;
+      border-radius: var(--radius-sm);
+      padding: 7px 10px;
+      display: none;
+    }
+    .register-feedback.success {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: var(--success);
+      display: block;
+    }
+    .register-feedback.error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: var(--danger);
+      display: block;
+    }
+
+    /* ─── Sidebar: Search ────────────────────────────────────────────── */
+    .sidebar-search {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+    .search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; fill: var(--text-faint);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      padding: 9px 12px 9px 34px;
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 13px; font-family: inherit;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.15);
+    }
+    .search-input::placeholder { color: var(--text-faint); }
+
+    /* ─── Sidebar: Union List ────────────────────────────────────────── */
+    .unions-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex; flex-direction: column; gap: 7px;
+    }
+
+    .union-item {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative; overflow: hidden;
+    }
+    .union-item::before {
+      content: ''; position: absolute;
+      left: 0; top: 0; bottom: 0; width: 3px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent-purple));
+      transform: scaleY(0);
+      transition: transform var(--transition);
+    }
+    .union-item:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.1);
+      transform: translateY(-1px);
+    }
+    .union-item.active {
+      background: rgba(var(--accent-rgb),0.07);
+      border-color: rgba(var(--accent-rgb),0.28);
+    }
+    .union-item.active::before { transform: scaleY(1); }
+    .union-item.scraping {
+      border-color: rgba(var(--accent-purple-rgb),0.25);
+    }
+
+    .union-row-top {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+    }
+    .union-cnpj {
+      font-family: 'Outfit', monospace;
+      font-size: 12px; color: var(--accent); font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .spinner-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(var(--accent-purple-rgb),0.12);
+      border: 1px solid rgba(var(--accent-purple-rgb),0.2);
+      border-radius: 20px;
+      padding: 1px 7px;
+      font-size: 9px; font-weight: 700; color: #c084fc;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-dot {
+      width: 7px; height: 7px;
+      border: 1.5px solid #c084fc;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .union-name {
+      font-size: 12px; font-weight: 500; line-height: 1.4;
+      color: var(--text-main);
+      display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; margin-bottom: 8px;
+    }
+    .union-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; color: var(--text-muted);
+    }
+    .badge-count {
+      background: linear-gradient(135deg,rgba(var(--accent-rgb),0.18),rgba(var(--accent-purple-rgb),0.18));
+      border: 1px solid rgba(var(--accent-rgb),0.18);
+      padding: 1px 8px; border-radius: 20px;
+      color: var(--text-main); font-weight: 700; font-size: 11px;
+    }
+
+    /* ─── Main Header ────────────────────────────────────────────────── */
+    .main-header {
+      padding: 22px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(10,11,16,0.5); backdrop-filter: blur(12px);
+      flex-shrink: 0;
+    }
+    .main-title h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 21px; font-weight: 600;
+    }
+    .main-title p {
+      font-size: 12px; color: var(--text-muted); margin-top: 3px;
+    }
+
+    /* ─── Instruments Container ──────────────────────────────────────── */
+    .instruments-container {
+      flex: 1;
+      padding: 28px 32px;
+      overflow-y: auto;
+    }
+
+    .instruments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    /* ─── Instrument Card ────────────────────────────────────────────── */
+    .inst-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      transition: all var(--transition);
+      display: flex; flex-direction: column;
+    }
+    .inst-card:hover {
+      border-color: rgba(var(--accent-rgb),0.25);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+      transform: translateY(-3px);
+    }
+
+    .inst-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .inst-type-badge {
+      padding: 3px 9px; border-radius: var(--radius-sm);
+      font-size: 9px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .inst-type-badge.act { background: rgba(var(--accent-rgb),0.12); border-color: rgba(var(--accent-rgb),0.22); color: #818cf8; }
+    .inst-type-badge.cct { background: rgba(var(--accent-purple-rgb),0.12); border-color: rgba(var(--accent-purple-rgb),0.22); color: #c084fc; }
+
+    .inst-uf-badge {
+      background: var(--bg-tertiary); border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;
+    }
+    .inst-number {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px; font-weight: 600;
+      color: var(--text-main); margin-bottom: 12px;
+    }
+    .inst-meta-item {
+      display: flex; justify-content: space-between;
+      font-size: 11px; margin-bottom: 5px; color: var(--text-muted);
+    }
+    .inst-meta-item span:last-child { color: var(--text-main); font-weight: 500; }
+    .inst-divider { height: 1px; background: var(--border); margin: 14px 0; }
+    .inst-actions { display: flex; gap: 8px; margin-top: auto; }
+
+    .btn {
+      flex: 1; padding: 8px 10px; border-radius: var(--radius-sm);
+      font-size: 11px; font-weight: 700; font-family: inherit;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 5px; border: none; outline: none;
+      transition: all var(--transition); text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+      color: #fff; box-shadow: 0 4px 10px rgba(var(--accent-rgb),0.22);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 16px rgba(var(--accent-rgb),0.38); transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); color: var(--text-main);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: var(--border-hover); }
+
+    /* ─── Empty State ────────────────────────────────────────────────── */
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100%; text-align: center; padding: 40px;
+    }
+    .empty-icon {
+      width: 72px; height: 72px;
+      background: rgba(var(--accent-rgb),0.08);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      border: 1px dashed rgba(var(--accent-rgb),0.25);
+    }
+    .empty-icon svg { width: 36px; height: 36px; fill: var(--accent); }
+    .empty-state h3 { font-family: 'Outfit', sans-serif; font-size: 18px; margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; color: var(--text-muted); max-width: 380px; }
+
+    /* ─── Drawer Overlay ─────────────────────────────────────────────── */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(5px);
+      z-index: 200;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--transition);
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+    /* ─── Drawer ─────────────────────────────────────────────────────── */
+    .drawer {
+      position: fixed;
+      top: 0; right: 0;
+      width: min(780px, 100vw);
+      height: 100vh;              /* always full viewport height */
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      z-index: 201;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+      box-shadow: -12px 0 40px rgba(0,0,0,0.5);
+    }
+    .drawer.open { transform: translateX(0); }
+
+    /* Header – fixed inside drawer */
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
+    }
+    .drawer-title h3 { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 600; }
+    .drawer-title p { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    .drawer-close {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      cursor: pointer; width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+    }
+    .drawer-close:hover { background: rgba(255,255,255,0.09); transform: rotate(90deg); }
+    .drawer-close svg { width: 13px; height: 13px; fill: var(--text-main); }
+
+    /* Filters – fixed inside drawer */
+    .drawer-filters {
+      padding: 13px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      background: rgba(255,255,255,0.01);
+      flex-shrink: 0;
+    }
+    .filter-label {
+      font-size: 10px; text-transform: uppercase;
+      font-weight: 700; color: var(--text-faint); letter-spacing: 0.5px;
+    }
+    .filter-tag {
+      padding: 4px 11px; border-radius: 20px;
+      font-size: 10px; font-weight: 600; cursor: pointer;
+      background: var(--bg-tertiary); border: 1px solid var(--border);
+      transition: all var(--transition);
+      color: var(--text-muted);
+    }
+    .filter-tag:hover { border-color: var(--border-hover); color: var(--text-main); }
+    .filter-tag.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ─── Drawer Content: scrollable clause list ─────────────────────── */
+    .drawer-content {
+      flex: 1;               /* fills remaining height */
+      overflow-y: auto;      /* THIS is the only scroll zone */
+      padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    /* ─── Clause Card ────────────────────────────────────────────────── */
+    .clause-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .clause-card:hover { border-color: rgba(255,255,255,0.14); }
+
+    .clause-header {
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; user-select: none;
+      transition: background var(--transition);
+    }
+    .clause-header:hover { background: rgba(255,255,255,0.04); }
+    .clause-header.expanded { background: rgba(var(--accent-rgb),0.05); }
+
+    .clause-header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+
+    .clause-chevron {
+      width: 16px; height: 16px; fill: var(--text-faint);
+      flex-shrink: 0;
+      transition: transform var(--transition);
+    }
+    .clause-header.expanded .clause-chevron { transform: rotate(180deg); fill: var(--accent); }
+
+    .clause-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .clause-category {
+      flex-shrink: 0;
+      font-size: 9px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 2px 8px; border-radius: 4px;
+      background: rgba(var(--accent-rgb),0.09);
+      border: 1px solid rgba(var(--accent-rgb),0.18);
+      color: #818cf8;
+    }
+
+    /* ─── Clause Body: NO fixed max-height. Scrolls via drawer-content ─ */
+    .clause-body {
+      /* Collapsed by default via JS – no max-height constraint needed */
+      padding: 18px 20px;
+      font-size: 13px;
+      line-height: 1.75;
+      color: #d1d5db;
+      background: rgba(10,11,16,0.25);
+
+      /* Remove white-space: pre-wrap so HTML renders correctly */
+      word-break: break-word;
+    }
+    .clause-body[hidden] { display: none; }
+
+    /* ─── Rich HTML content inside clauses ──────────────────────────── */
+    .clause-body p {
+      margin-bottom: 10px;
+    }
+    .clause-body p:last-child { margin-bottom: 0; }
+
+    .clause-body b, .clause-body strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .clause-body br { content: ''; display: block; margin: 3px 0; }
+
+    .clause-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 12px;
+    }
+    .clause-body table th,
+    .clause-body table td {
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 7px 10px;
+      text-align: left;
+    }
+    .clause-body table th {
+      background: rgba(var(--accent-rgb),0.1);
+      color: var(--text-main);
+      font-weight: 700;
+    }
+    .clause-body table tr:nth-child(even) td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .clause-body ul, .clause-body ol {
+      padding-left: 22px;
+      margin: 8px 0;
+    }
+    .clause-body li { margin-bottom: 4px; }
+
+    .clause-body a {
+      color: #818cf8;
+      text-decoration: underline;
+    }
+    .clause-body a:hover { color: #a5b4fc; }
+
+    /* ─── IA Block ───────────────────────────────────────────────────── */
+    .clause-ia {
+      margin-top: 14px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(var(--accent-purple-rgb),0.08);
+      border-left: 3px solid var(--accent-purple);
+      font-size: 12px; color: #e9d5ff;
+    }
+    .clause-ia strong { color: #fff; }
+    .clause-ia p { margin-top: 4px; }
+
+    /* ─── Animations ─────────────────────────────────────────────────── */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .union-item { animation: fadeSlideUp 0.25s ease both; }
+
+    /* ─── Loader dots ────────────────────────────────────────────────── */
+    .loading-dots {
+      display: inline-flex; gap: 4px; align-items: center;
+    }
+    .loading-dots span {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent);
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,80%,100% { transform: translateY(0); }
+      40%         { transform: translateY(-5px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      </div>
+      <div class="logo-text">
+        <h1>MTE Mediador</h1>
+        <span>Scraper Dashboard</span>
+      </div>
+    </div>
+
+    <!-- Register New Company -->
+    <div class="register-section">
+      <div class="section-label">Nova Empresa</div>
+
+      <div class="form-field">
+        <label for="input-cnpj">CNPJ</label>
+        <input
+          id="input-cnpj"
+          type="text"
+          class="form-input"
+          placeholder="00.000.000/0000-00"
+          maxlength="18"
+          autocomplete="off"
+        >
+        <div class="form-error-msg" id="cnpj-error">CNPJ inválido. Digite os 14 dígitos.</div>
+      </div>
+
+      <div class="form-field">
+        <label for="input-nome">Nome / Razão Social</label>
+        <input
+          id="input-nome"
+          type="text"
+          class="form-input"
+          placeholder="Nome da empresa (opcional)"
+          autocomplete="off"
+        >
+      </div>
+
+      <button class="btn-register" id="btn-register" onclick="registerCompany()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Cadastrar e Coletar
+      </button>
+
+      <div class="register-feedback" id="register-feedback"></div>
+    </div>
+
+    <!-- Search -->
+    <div class="sidebar-search">
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" id="search-union" class="search-input" placeholder="Buscar por CNPJ ou nome…">
+      </div>
+    </div>
+
+    <!-- Union list -->
+    <div class="unions-list" id="unions-list">
+      <div style="text-align:center;padding:20px;color:var(--text-muted)">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ════════════════════════════ MAIN CONTENT ═════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- Header -->
+    <div class="main-header">
+      <div class="main-title">
+        <h2 id="main-title">Selecione uma Empresa</h2>
+        <p id="main-subtitle">Escolha um CNPJ na barra lateral para visualizar os instrumentos coletivos</p>
+      </div>
+    </div>
+
+    <!-- Instruments -->
+    <div class="instruments-container" id="instruments-container">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        </div>
+        <h3>Nenhuma empresa selecionada</h3>
+        <p>Cadastre uma nova empresa pelo formulário ao lado ou selecione uma já existente para ver os instrumentos coletivos coletados.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ════════════════════════ DRAWER: Visualizador de cláusulas ═══════════ -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Visualizador de Cláusulas">
+
+    <!-- Drawer Header -->
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <h3 id="drawer-number">—</h3>
+        <p id="drawer-desc">Cláusulas extraídas do documento</p>
+      </div>
+      <button class="drawer-close" id="drawer-close" aria-label="Fechar">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </div>
+
+    <!-- Drawer Filters -->
+    <div class="drawer-filters">
+      <span class="filter-label">Categoria:</span>
+      <div id="drawer-filters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- Drawer scrollable content — the only scroll zone for clauses -->
+    <div class="drawer-content" id="drawer-content">
+      <!-- Clause cards are rendered here -->
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ SCRIPT ════════════════════════════════ -->
+  <script>
+    // ── State ──────────────────────────────────────────────────────────────
+    let unions          = [];
+    let selectedUnion   = null;
+    let clauses         = [];
+    let activeFilter    = 'ALL';
+    let pollInterval    = null;
+
+    // ── DOM refs ───────────────────────────────────────────────────────────
+    const unionsList          = document.getElementById('unions-list');
+    const searchInput         = document.getElementById('search-union');
+    const mainTitle           = document.getElementById('main-title');
+    const mainSubtitle        = document.getElementById('main-subtitle');
+    const instrumentsContainer = document.getElementById('instruments-container');
+    const drawerOverlay       = document.getElementById('drawer-overlay');
+    const drawer              = document.getElementById('drawer');
+    const drawerClose         = document.getElementById('drawer-close');
+    const drawerNumber        = document.getElementById('drawer-number');
+    const drawerDesc          = document.getElementById('drawer-desc');
+    const drawerContent       = document.getElementById('drawer-content');
+    const drawerFilters       = document.getElementById('drawer-filters');
+    const inputCnpj           = document.getElementById('input-cnpj');
+    const inputNome           = document.getElementById('input-nome');
+    const btnRegister         = document.getElementById('btn-register');
+    const cnpjError           = document.getElementById('cnpj-error');
+    const registerFeedback    = document.getElementById('register-feedback');
+
+    // ── CNPJ helpers ───────────────────────────────────────────────────────
+    function cleanCnpj(v) { return v.replace(/\D/g, ''); }
+
+    function maskCnpj(v) {
+      let s = cleanCnpj(v).slice(0, 14);
+      if (s.length > 12) s = s.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+      else if (s.length > 8) s = s.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, '$1.$2.$3/$4');
+      else if (s.length > 5) s = s.replace(/^(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+      else if (s.length > 2) s = s.replace(/^(\d{2})(\d{0,3})/, '$1.$2');
+      return s;
+    }
+
+    function formatCnpj(v) {
+      const s = cleanCnpj(v || '').padStart(14, '0');
+      return s.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+    }
+
+    inputCnpj.addEventListener('input', e => {
+      e.target.value = maskCnpj(e.target.value);
+      cnpjError.style.display = 'none';
+      inputCnpj.classList.remove('error');
+    });
+
+    // ── Register company ───────────────────────────────────────────────────
+    async function registerCompany() {
+      const rawCnpj = cleanCnpj(inputCnpj.value);
+      const nome    = inputNome.value.trim();
+
+      // Validate
+      if (rawCnpj.length !== 14) {
+        inputCnpj.classList.add('error');
+        cnpjError.style.display = 'block';
+        return;
+      }
+
+      btnRegister.disabled = true;
+      btnRegister.innerHTML = `
+        <div style="width:12px;height:12px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite"></div>
+        Registrando…
+      `;
+      hideFeedback();
+
+      try {
+        const res = await fetch('/api/unions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cnpj: rawCnpj, nome: nome || undefined })
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        showFeedback('success', `✅ Empresa cadastrada! Coleta iniciada para ${formatCnpj(rawCnpj)}.`);
+
+        // Clear form
+        inputCnpj.value = '';
+        inputNome.value = '';
+
+        // Refresh list and auto-select the new company
+        await fetchUnions();
+        const newUnion = unions.find(u => cleanCnpj(u.cnpj) === rawCnpj);
+        if (newUnion) selectUnion(newUnion);
+
+      } catch (err) {
+        showFeedback('error', `❌ Erro: ${err.message}`);
+      } finally {
+        btnRegister.disabled = false;
+        btnRegister.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Cadastrar e Coletar
+        `;
+      }
+    }
+
+    function showFeedback(type, msg) {
+      registerFeedback.className = `register-feedback ${type}`;
+      registerFeedback.textContent = msg;
+    }
+    function hideFeedback() {
+      registerFeedback.className = 'register-feedback';
+    }
+
+    // ── Fetch unions ───────────────────────────────────────────────────────
+    async function fetchUnions() {
+      try {
+        const res = await fetch('/api/unions');
+        unions = await res.json();
+        renderUnionsList(filterUnions(searchInput.value));
+
+        // Refresh active union's doc count display if still selected
+        if (selectedUnion) {
+          const updated = unions.find(u => u.id === selectedUnion.id);
+          if (updated) {
+            // If it just finished scraping, reload instruments
+            if (selectedUnion.scraping && !updated.scraping) {
+              await loadInstruments(updated);
+            }
+            selectedUnion = updated;
+          }
+        }
+
+        // If no more scraping happening, we can slow down / stop polling
+        const anyScaping = unions.some(u => u.scraping);
+        if (!anyScaping && pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      } catch (err) {
+        console.error('fetchUnions error:', err);
+      }
+    }
+
+    function filterUnions(q) {
+      if (!q) return unions;
+      const lq = q.toLowerCase();
+      return unions.filter(u =>
+        (u.cnpj && u.cnpj.includes(lq)) ||
+        (u.nome && u.nome.toLowerCase().includes(lq)) ||
+        formatCnpj(u.cnpj).includes(q)
+      );
+    }
+
+    function renderUnionsList(list) {
+      if (!list.length) {
+        unionsList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">Nenhuma empresa encontrada.</div>`;
+        return;
+      }
+
+      unionsList.innerHTML = '';
+      list.forEach((u, i) => {
+        const item = document.createElement('div');
+        item.className = `union-item ${selectedUnion && selectedUnion.id === u.id ? 'active' : ''} ${u.scraping ? 'scraping' : ''}`;
+        item.style.animationDelay = `${i * 35}ms`;
+        item.addEventListener('click', () => selectUnion(u));
+
+        const scrapingBadge = u.scraping
+          ? `<span class="spinner-badge"><span class="spinner-dot"></span>Coletando</span>`
+          : '';
+
+        item.innerHTML = `
+          <div class="union-row-top">
+            <div class="union-cnpj">${formatCnpj(u.cnpj)}</div>
+            ${scrapingBadge}
+          </div>
+          <div class="union-name" title="${u.nome || ''}">${u.nome || 'Empresa sem nome'}</div>
+          <div class="union-meta">
+            <span>Status: <strong style="color:${u.ativo ? 'var(--success)' : 'var(--text-muted)'}">${u.ativo ? 'ATIVO' : 'INATIVO'}</strong></span>
+            <span class="badge-count">${u.docCount ?? 0} docs</span>
+          </div>
+        `;
+        unionsList.appendChild(item);
+      });
+    }
+
+    searchInput.addEventListener('input', () => {
+      renderUnionsList(filterUnions(searchInput.value));
+    });
+
+    // ── Select union ───────────────────────────────────────────────────────
+    async function selectUnion(union) {
+      selectedUnion = union;
+      renderUnionsList(filterUnions(searchInput.value));
+
+      mainTitle.textContent = union.nome || `CNPJ: ${formatCnpj(union.cnpj)}`;
+      mainSubtitle.textContent = `Instrumentos coletivos para ${formatCnpj(union.cnpj)}`;
+
+      if (union.scraping) {
+        instrumentsContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon" style="border-style:solid;border-color:rgba(168,85,247,0.3)">
+              <div style="width:32px;height:32px;border:3px solid var(--accent-purple);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+            </div>
+            <h3>Coleta em andamento…</h3>
+            <p>O robô está buscando os documentos do MTE Mediador. A lista será atualizada automaticamente.</p>
+          </div>
+        `;
+        startPolling();
+        return;
+      }
+
+      await loadInstruments(union);
+    }
+
+    async function loadInstruments(union) {
+      instrumentsContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        <p style="margin-top:12px;font-size:13px">Carregando instrumentos…</p>
+      </div>`;
+
+      try {
+        const res  = await fetch(`/api/instruments?cnpj=${union.cnpj}`);
+        const list = await res.json();
+        renderInstruments(list);
+      } catch (err) {
+        instrumentsContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:14px">Erro ao carregar instrumentos.</div>`;
+      }
+    }
+
+    // ── Polling ────────────────────────────────────────────────────────────
+    function startPolling() {
+      if (pollInterval) return; // already running
+      pollInterval = setInterval(fetchUnions, 4000);
+    }
+
+    // ── Render instruments ─────────────────────────────────────────────────
+    function renderInstruments(list) {
+      if (!list.length) {
+        instrumentsContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            </div>
+            <h3>Nenhum instrumento encontrado</h3>
+            <p>O robô ainda não coletou documentos para este CNPJ nas UFs configuradas (DF e GO).</p>
+          </div>
+        `;
+        return;
+      }
+
+      instrumentsContainer.innerHTML = '';
+      const grid = document.createElement('div');
+      grid.className = 'instruments-grid';
+
+      list.forEach(inst => {
+        const card = document.createElement('div');
+        card.className = 'inst-card';
+
+        const raw = (inst.tipoInstrumento || '').toLowerCase();
+        let label = inst.tipoInstrumento || 'Instrumento';
+        let cls   = '';
+        if (raw.includes('acordo'))  { label = 'Acordo Coletivo (ACT)';    cls = 'act'; }
+        else if (raw.includes('conven')) { label = 'Convenção Coletiva (CCT)'; cls = 'cct'; }
+
+        const fmt = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+        const htmlFile = inst.htmlPath ? inst.htmlPath.split('/').pop() : '';
+        const pdfFile  = inst.pdfPath  ? inst.pdfPath.split('/').pop()  : '';
+
+        card.innerHTML = `
+          <div class="inst-header">
+            <span class="inst-type-badge ${cls}">${label}</span>
+            <span class="inst-uf-badge">${inst.uf || '??'}</span>
+          </div>
+          <div class="inst-number">${inst.numeroSolicitacao || 'Sem número'}</div>
+          <div class="inst-meta-item"><span>Nº Registro:</span><span>${inst.numeroRegistro || '—'}</span></div>
+          <div class="inst-meta-item"><span>Protocolo:</span><span>${fmt(inst.dataProtocolo)}</span></div>
+          <div class="inst-meta-item"><span>Registro MTE:</span><span>${fmt(inst.dataRegistro)}</span></div>
+          <div class="inst-meta-item"><span>Vigência:</span><span>${fmt(inst.vigenciaInicio)} → ${fmt(inst.vigenciaFim)}</span></div>
+          <div class="inst-meta-item">
+            <span>Situação:</span>
+            <span style="color:${inst.situacao === 'PROCESSADO' ? 'var(--success)' : 'var(--warning)'};font-weight:700">${inst.situacao || 'BAIXADO'}</span>
+          </div>
+          <div class="inst-divider"></div>
+          <div class="inst-actions">
+            <button class="btn btn-primary" id="clauses-btn-${inst.id}" onclick="openClauses(${inst.id}, '${inst.numeroSolicitacao}')">
+              Ver Cláusulas
+            </button>
+            ${htmlFile ? `<a class="btn btn-secondary" href="/api/files/html?file=${htmlFile}" target="_blank">HTML</a>` : ''}
+            ${pdfFile  ? `<a class="btn btn-secondary" href="/api/files/pdf?file=${pdfFile}" target="_blank">PDF</a>`  : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      instrumentsContainer.appendChild(grid);
+    }
+
+    // ── Clauses drawer ─────────────────────────────────────────────────────
+    async function openClauses(instrumentId, solNumber) {
+      drawerNumber.textContent = solNumber || '—';
+      drawerDesc.textContent   = 'Carregando cláusulas…';
+      drawerContent.innerHTML  = `<div style="text-align:center;padding:40px;color:var(--text-muted)">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+      </div>`;
+      drawerFilters.innerHTML = '';
+      activeFilter = 'ALL';
+
+      drawerOverlay.classList.add('open');
+      drawer.classList.add('open');
+
+      try {
+        const res = await fetch(`/api/clauses?instrumentId=${instrumentId}`);
+        clauses = await res.json();
+        renderFilters();
+        renderClauses();
+      } catch (err) {
+        drawerContent.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger)">Erro ao carregar cláusulas.</div>`;
+      }
+    }
+
+    function closeDrawer() {
+      drawerOverlay.classList.remove('open');
+      drawer.classList.remove('open');
+    }
+
+    drawerClose.addEventListener('click', closeDrawer);
+    drawerOverlay.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+    // ── Render filters ─────────────────────────────────────────────────────
+    function renderFilters() {
+      const cats = ['ALL', ...new Set(clauses.map(c => c.categoria || 'Não classificada'))];
+      drawerFilters.innerHTML = '';
+      cats.forEach(cat => {
+        const tag = document.createElement('span');
+        tag.className = `filter-tag ${activeFilter === cat ? 'active' : ''}`;
+        tag.textContent = cat === 'ALL' ? 'Todas' : cat;
+        tag.addEventListener('click', () => {
+          activeFilter = cat;
+          renderFilters();
+          renderClauses();
+        });
+        drawerFilters.appendChild(tag);
+      });
+    }
+
+    // ── Render clauses ─────────────────────────────────────────────────────
+    function renderClauses() {
+      const filtered = activeFilter === 'ALL'
+        ? clauses
+        : clauses.filter(c => (c.categoria || 'Não classificada') === activeFilter);
+
+      drawerDesc.textContent = `${filtered.length} cláusula${filtered.length !== 1 ? 's' : ''} encontrada${filtered.length !== 1 ? 's' : ''}`;
+
+      if (!filtered.length) {
+        drawerContent.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">Nenhuma cláusula nesta categoria.</div>`;
+        return;
+      }
+
+      drawerContent.innerHTML = '';
+
+      filtered.forEach(clause => {
+        // Separate IA metadata if embedded in content
+        let content  = clause.conteudo || '';
+        let iaHtml   = '';
+        const iaIdx  = content.indexOf('[IA_SEMANTICA]:');
+        if (iaIdx !== -1) {
+          try {
+            const ia = JSON.parse(content.slice(iaIdx + 15).trim());
+            content  = content.slice(0, iaIdx).trim();
+            iaHtml = `
+              <div class="clause-ia">
+                <strong>💡 Análise IA:</strong>
+                <p>${ia.resumo || 'Sem resumo'}</p>
+                ${ia.valor  ? `<p><strong>Valor:</strong> ${ia.valor}</p>`   : ''}
+                ${ia.impacto? `<p><strong>Impacto:</strong> ${ia.impacto}</p>` : ''}
+              </div>
+            `;
+          } catch (_) {}
+        }
+
+        const card = document.createElement('div');
+        card.className = 'clause-card';
+
+        // Build card HTML — body starts hidden
+        card.innerHTML = `
+          <div class="clause-header" role="button" tabindex="0" aria-expanded="false">
+            <div class="clause-header-left">
+              <svg class="clause-chevron" viewBox="0 0 24 24">
+                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+              </svg>
+              <span class="clause-title">${clause.titulo || 'Cláusula sem título'}</span>
+            </div>
+            <span class="clause-category">${clause.categoria || 'Não classificada'}</span>
+          </div>
+          <div class="clause-body" hidden>
+            ${content}
+            ${iaHtml}
+          </div>
+        `;
+
+        const header = card.querySelector('.clause-header');
+        const body   = card.querySelector('.clause-body');
+
+        function toggleClause() {
+          const isOpen = !body.hidden;
+          body.hidden = isOpen;
+          header.setAttribute('aria-expanded', String(!isOpen));
+          header.classList.toggle('expanded', !isOpen);
+        }
+
+        header.addEventListener('click', toggleClause);
+        header.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleClause(); } });
+
+        drawerContent.appendChild(card);
+      });
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    async function init() {
+      await fetchUnions();
+
+      // If there are already active scrapes on load, start polling
+      if (unions.some(u => u.scraping)) startPolling();
+    }
+
+    init();
+  </script>
+</body>
+</html>

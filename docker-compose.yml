@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mediador_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: mediador_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: mediador_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root_password
+      - DB_DATABASE=mediador_db
+      - HTTP_TIMEOUT=30000
+      - HTTP_RETRIES=3
+      - STORAGE_RAW_XLS=storage/raw/xls
+      - STORAGE_RAW_HTML=storage/raw/html
+      - STORAGE_RAW_PDF=storage/raw/pdf
+      - LOG_LEVEL=info
+      - IA_PROVIDER=stub
+      - IA_API_KEY=mock-key
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

@@ -1,0 +1,1 @@
+ALTER TABLE `clausulas` MODIFY COLUMN `conteudo` longtext;
