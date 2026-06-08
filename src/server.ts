@@ -1,7 +1,7 @@
 import { serve } from 'bun';
 import { db } from './database/connection';
 import { sindicatos, instrumentos, clausulas } from './database/schema';
-import { eq } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 import { join, basename } from 'path';
 import { env } from './config/env';
 import { logger } from './utils/logger';
@@ -20,19 +20,24 @@ export function startServer(port = 3000) {
         // API: get list of unions
         if (path === '/api/unions' && req.method === 'GET') {
           const result = await db.select().from(sindicatos);
-          
-          // Enrich with document counts
-          const enrichedUnions = [];
-          for (const union of result) {
-            const docs = await db.select()
-              .from(instrumentos)
-              .where(eq(instrumentos.sindicatoId, union.id));
-            enrichedUnions.push({
-              ...union,
-              docCount: docs.length,
-              scraping: activeScrapes.has(union.cnpj)
-            });
-          }
+
+          // Single aggregated query for doc counts (avoids N+1)
+          const docCounts = await db
+            .select({
+              sindicatoId: instrumentos.sindicatoId,
+              total: count(instrumentos.id)
+            })
+            .from(instrumentos)
+            .groupBy(instrumentos.sindicatoId);
+
+          const countMap = new Map(docCounts.map(r => [r.sindicatoId, r.total]));
+
+          const enrichedUnions = result.map(union => ({
+            ...union,
+            docCount: countMap.get(union.id) ?? 0,
+            scraping: activeScrapes.has(union.cnpj)
+          }));
+
           return Response.json(enrichedUnions);
         }
 

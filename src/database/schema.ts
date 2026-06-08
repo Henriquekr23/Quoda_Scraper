@@ -32,7 +32,7 @@ export const clausulas = mysqlTable('clausulas', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
   instrumentoId: bigint('instrumento_id', { mode: 'number' }).references(() => instrumentos.id),
   titulo: text('titulo'),
-  conteudo: longtext('conteudo'), // Note: text type in drizzle mysql is sufficient, or longtext if specified (drizzle doesn't have a separate longtext core type, text is mapped to text/mediumtext/longtext depending on params if supported, but mysql text supports 64KB, mediumtext supports 16MB. Drizzle mysql text can take { length: 65535 } or similar. We can define text without parameters, which maps to TEXT).
+  conteudo: longtext('conteudo'), // LONGTEXT supports up to 4GB — needed for large clause HTML content
   categoria: varchar('categoria', { length: 100 }),
   criadoEm: timestamp('criado_em').default(sql`CURRENT_TIMESTAMP`)
 });

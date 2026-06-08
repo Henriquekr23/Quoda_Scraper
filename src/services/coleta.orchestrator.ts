@@ -47,17 +47,19 @@ export class ColetaOrchestrator {
     await ensureDir(env.STORAGE_RAW_PDF);
 
     // 2. Fetch active unions
-    let activeUnions = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let activeUnions: any[] = [];
     if (specificCnpj) {
       const cleanedCnpj = specificCnpj.replace(/\D/g, '');
       let union = await this.sindicatosRepo.findByCnpj(cleanedCnpj);
       if (!union) {
         logger.info(`CNPJ ${cleanedCnpj} não cadastrado no banco. Adicionando automaticamente...`);
-        union = await this.sindicatosRepo.create({
+        const created = await this.sindicatosRepo.create({
           cnpj: cleanedCnpj,
           nome: `Sindicato CNPJ ${cleanedCnpj} (CLI)`,
           ativo: true
         });
+        union = await this.sindicatosRepo.findByCnpj(cleanedCnpj) ?? { ...created, criadoEm: null };
       }
       activeUnions = [union];
     } else {

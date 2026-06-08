@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../database/connection';
 import { sindicatos } from '../../database/schema';
 

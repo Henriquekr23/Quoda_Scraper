@@ -21,20 +21,20 @@ export interface InstrumentoData {
 export class InstrumentosRepository {
   async create(data: InstrumentoData) {
     const [result] = await db.insert(instrumentos).values({
-      sindicatoId: data.sindicatoId,
-      numeroRegistro: data.numeroRegistro || null,
-      numeroSolicitacao: data.numeroSolicitacao || null,
-      tipoInstrumento: data.tipoInstrumento || null,
+      sindicato_id: data.sindicatoId,
+      numero_registro: data.numeroRegistro || null,
+      numero_solicitacao: data.numeroSolicitacao || null,
+      tipo_instrumento: data.tipoInstrumento || null,
       uf: data.uf || null,
-      dataProtocolo: data.dataProtocolo ? data.dataProtocolo.toISOString().split('T')[0] : null,
-      dataRegistro: data.dataRegistro ? data.dataRegistro.toISOString().split('T')[0] : null,
-      vigenciaInicio: data.vigenciaInicio ? data.vigenciaInicio.toISOString().split('T')[0] : null,
-      vigenciaFim: data.vigenciaFim ? data.vigenciaFim.toISOString().split('T')[0] : null,
+      data_protocolo: data.dataProtocolo ? data.dataProtocolo.toISOString().split('T')[0] : null,
+      data_registro: data.dataRegistro ? data.dataRegistro.toISOString().split('T')[0] : null,
+      vigencia_inicio: data.vigenciaInicio ? data.vigenciaInicio.toISOString().split('T')[0] : null,
+      vigencia_fim: data.vigenciaFim ? data.vigenciaFim.toISOString().split('T')[0] : null,
       situacao: data.situacao || null,
-      htmlPath: data.htmlPath || null,
-      pdfPath: data.pdfPath || null,
-      hashDocumento: data.hashDocumento || null
-    });
+      html_path: data.htmlPath || null,
+      pdf_path: data.pdfPath || null,
+      hash_documento: data.hashDocumento || null
+    } as any);
     return { id: result.insertId, ...data };
   }
 
